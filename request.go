@@ -1,14 +1,18 @@
 package gremlin
 
 import (
-	"github.com/satori/go.uuid"
+	"encoding/json"
+	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type Request struct {
-	RequestId string       `json:"requestId"`
-	Op        string       `json:"op"`
-	Processor string       `json:"processor"`
-	Args      *RequestArgs `json:"args"`
+	client    *GremlinClient `json:"-"`
+	RequestId string         `json:"requestId"`
+	Op        string         `json:"op"`
+	Processor string         `json:"processor"`
+	Args      *RequestArgs   `json:"args"`
 }
 
 type RequestArgs struct {
@@ -24,20 +28,6 @@ type RequestArgs struct {
 }
 
 type Bind map[string]interface{}
-
-func Query(query string) *Request {
-	args := &RequestArgs{
-		Gremlin:  query,
-		Language: "gremlin-groovy",
-	}
-	req := &Request{
-		RequestId: uuid.NewV4().String(),
-		Op:        "eval",
-		Processor: "",
-		Args:      args,
-	}
-	return req
-}
 
 func (req *Request) Bindings(bindings Bind) *Request {
 	req.Args.Bindings = bindings
@@ -62,4 +52,31 @@ func (req *Request) Session(session string) *Request {
 func (req *Request) SetProcessor(processor string) *Request {
 	req.Processor = processor
 	return req
+}
+
+func (req *Request) Exec() (data []byte, err error) {
+	// Prepare the Data
+	message, err := json.Marshal(req)
+	if err != nil {
+		return
+	}
+	// Prepare the request message
+	var requestMessage []byte
+	mimeType := []byte("application/json")
+	mimeTypeLen := byte(len(mimeType))
+	requestMessage = append(requestMessage, mimeTypeLen)
+	requestMessage = append(requestMessage, mimeType...)
+	requestMessage = append(requestMessage, message...)
+
+	if err = req.client.wsConn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+		return
+	}
+	if err = req.client.wsConn.SetReadDeadline(time.Now().Add(10 * time.Second)); err != nil {
+		return
+	}
+	if err = req.client.wsConn.WriteMessage(websocket.BinaryMessage, requestMessage); err != nil {
+		return
+	}
+
+	return req.ReadResponse()
 }
