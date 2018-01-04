@@ -25,13 +25,14 @@ type RequestArgs struct {
 
 type Bind map[string]interface{}
 
-func Query(query string) *Request {
+func Query(query string) (req *Request) {
 	args := &RequestArgs{
 		Gremlin:  query,
 		Language: "gremlin-groovy",
 	}
-	req := &Request{
-		RequestId: uuid.NewV4().String(),
+	uuid, _ := uuid.NewV4()
+	req = &Request{
+		RequestId: uuid.String(),
 		Op:        "eval",
 		Processor: "",
 		Args:      args,

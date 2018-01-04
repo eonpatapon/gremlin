@@ -80,7 +80,8 @@ func init() {
 }
 
 func TestSingleResponse(t *testing.T) {
-	reqID := uuid.NewV4().String()
+	uuid1, _ := uuid.NewV4()
+	reqID := uuid1.String()
 
 	s.Responses = [][]Response{
 		[]Response{
@@ -104,7 +105,8 @@ func TestSingleResponse(t *testing.T) {
 }
 
 func TestEmptyResponse(t *testing.T) {
-	reqID := uuid.NewV4().String()
+	uuid1, _ := uuid.NewV4()
+	reqID := uuid1.String()
 
 	s.Responses = [][]Response{
 		[]Response{
@@ -128,7 +130,8 @@ func TestEmptyResponse(t *testing.T) {
 }
 
 func TestPartialResponse(t *testing.T) {
-	reqID := uuid.NewV4().String()
+	uuid1, _ := uuid.NewV4()
+	reqID := uuid1.String()
 
 	s.Responses = [][]Response{
 		[]Response{
@@ -170,8 +173,10 @@ func TestPartialResponse(t *testing.T) {
 }
 
 func TestConcurrentRequest(t *testing.T) {
-	reqID1 := uuid.NewV4().String()
-	reqID2 := uuid.NewV4().String()
+	uuid1, _ := uuid.NewV4()
+	reqID1 := uuid1.String()
+	uuid2, _ := uuid.NewV4()
+	reqID2 := uuid2.String()
 
 	s.Responses = [][]Response{
 		[]Response{
@@ -235,12 +240,13 @@ func TestConcurrentRequest(t *testing.T) {
 }
 
 func TestError(t *testing.T) {
-	reqID := uuid.NewV4().String()
+	uuid1, _ := uuid.NewV4()
+	reqID1 := uuid1.String()
 
 	s.Responses = [][]Response{
 		[]Response{
 			Response{
-				RequestId: reqID,
+				RequestId: reqID1,
 				Status: &ResponseStatus{
 					Code: StatusServerError,
 				},
@@ -249,7 +255,7 @@ func TestError(t *testing.T) {
 	}
 
 	q := Query("")
-	q.RequestId = reqID
+	q.RequestId = reqID1
 	_, err := c.Send(q)
 
 	assert.Equal(t, ErrorMsg[StatusServerError], err.Error(), "Should get server error")
