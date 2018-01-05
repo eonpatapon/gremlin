@@ -14,6 +14,7 @@ import (
 const (
 	maxMessages    = 1024
 	maxMessageSize = 0
+	maxFrameSize   = 65536
 	writeWait      = 5 * time.Second
 	pongTimeout    = 5 * time.Second
 )
@@ -21,6 +22,7 @@ const (
 var (
 	ErrConnectionClosed = errors.New("Connection closed")
 	ErrUnknownError     = errors.New("An unknown error occured")
+	ErrLargeRequest     = errors.New("Request is too large")
 )
 
 // ClientRequest describes the message to be sent
@@ -61,7 +63,7 @@ func NewClient(serverURL string) *Client {
 		Proxy:            http.ProxyFromEnvironment,
 		HandshakeTimeout: 3 * time.Second,
 		ReadBufferSize:   8192,
-		WriteBufferSize:  32768,
+		WriteBufferSize:  maxFrameSize,
 	}
 	c := &Client{
 		endpoint:            serverURL,
@@ -187,6 +189,10 @@ func (c *Client) sendRequest(r *Request) (err error) {
 	requestMessage = append(requestMessage, mimeTypeLen)
 	requestMessage = append(requestMessage, mimeType...)
 	requestMessage = append(requestMessage, message...)
+
+	if len(requestMessage) > maxFrameSize {
+		return ErrLargeRequest
+	}
 
 	c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 	if err := c.conn.WriteMessage(websocket.BinaryMessage, requestMessage); err != nil {
