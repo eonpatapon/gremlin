@@ -1,5 +1,7 @@
 package gremlin
 
+import "errors"
+
 const (
 	StatusSuccess                  = 200
 	StatusNoContent                = 204
@@ -14,13 +16,24 @@ const (
 	StatusServerSerializationError = 599
 )
 
-var ErrorMsg = map[int]string{
-	StatusUnauthorized:             "Unauthorized",
-	StatusAuthenticate:             "Authenticate",
-	StatusMalformedRequest:         "Malformed Request",
-	StatusInvalidRequestArguments:  "Invalid Request Arguments",
-	StatusServerError:              "Server Error",
-	StatusScriptEvaluationError:    "Script Evaluation Error",
-	StatusServerTimeout:            "Server Timeout",
-	StatusServerSerializationError: "Server Serialization Error",
+var (
+	ErrStatusUnauthorized             = errors.New("Unauthorized")
+	ErrStatusAuthenticate             = errors.New("Authenticate")
+	ErrStatusMalformedRequest         = errors.New("Malformed Request")
+	ErrStatusInvalidRequestArguments  = errors.New("Invalid Request Arguments")
+	ErrStatusServerError              = errors.New("Server Error")
+	ErrStatusScriptEvaluationError    = errors.New("Script Evaluation Error")
+	ErrStatusServerTimeout            = errors.New("Server Timeout")
+	ErrStatusServerSerializationError = errors.New("Server Serialization Error")
+)
+
+var ErrorMsg = map[int]error{
+	StatusUnauthorized:             ErrStatusUnauthorized,
+	StatusAuthenticate:             ErrStatusAuthenticate,
+	StatusMalformedRequest:         ErrStatusMalformedRequest,
+	StatusInvalidRequestArguments:  ErrStatusInvalidRequestArguments,
+	StatusServerError:              ErrStatusServerError,
+	StatusScriptEvaluationError:    ErrStatusScriptEvaluationError,
+	StatusServerTimeout:            ErrStatusServerTimeout,
+	StatusServerSerializationError: ErrStatusServerSerializationError,
 }

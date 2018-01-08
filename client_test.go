@@ -258,6 +258,6 @@ func TestError(t *testing.T) {
 	q.RequestId = reqID1
 	_, err := c.Send(q)
 
-	assert.Equal(t, ErrorMsg[StatusServerError], err.Error(), "Should get server error")
+	assert.Equal(t, ErrStatusServerError, err, "Should get server error")
 
 }

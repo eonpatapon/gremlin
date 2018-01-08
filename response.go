@@ -2,10 +2,10 @@ package gremlin
 
 import (
 	"encoding/json"
-	"errors"
-	"github.com/gorilla/websocket"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type Response struct {
@@ -64,10 +64,10 @@ func ReadResponse(ws *websocket.Conn) (data []byte, err error) {
 			return
 
 		default:
-			if msg, exists := ErrorMsg[res.Status.Code]; exists {
-				err = errors.New(msg)
+			if gremlinErr, exists := ErrorMsg[res.Status.Code]; exists {
+				err = gremlinErr
 			} else {
-				err = errors.New("An unknown error occured")
+				err = ErrUnknownError
 			}
 			return
 		}
