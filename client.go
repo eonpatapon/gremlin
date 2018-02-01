@@ -16,6 +16,7 @@ const (
 	maxMessageSize = 0
 	maxFrameSize   = 65536
 	writeWait      = 5 * time.Second
+	pingDelay      = 2 * time.Second
 	pongTimeout    = 5 * time.Second
 )
 
@@ -99,15 +100,15 @@ func (c *Client) connect() (err error) {
 	}
 
 	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(100 * time.Second))
+	c.conn.SetReadDeadline(time.Now().Add(pongTimeout + pingDelay))
 	c.conn.SetPongHandler(func(string) error {
-		c.conn.SetReadDeadline(time.Now().Add(pongTimeout))
+		c.conn.SetReadDeadline(time.Now().Add(pongTimeout + pingDelay))
 		return nil
 	})
 
 	c.connected.Store(true)
 	c.connectedEvent <- true
-	c.pingTicker = time.NewTicker(pongTimeout * 8 / 10)
+	c.pingTicker = time.NewTicker(pingDelay)
 
 	defer c.connected.Store(false)
 	go c.connectedHandler()
@@ -148,16 +149,18 @@ func (c *Client) run() error {
 		case m := <-c.read:
 			c.dispatchMsg(m)
 		case <-c.pingTicker.C:
-			c.sendPing()
+			if err := c.sendPing(); err != nil {
+				fmt.Println(fmt.Sprintf("Error while sending ping: %s", err))
+				c.pingTicker.Stop()
+				c.quit <- err
+			}
 		}
 	}
 }
 
-func (c *Client) sendPing() {
+func (c *Client) sendPing() error {
 	c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-	if err := c.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-		fmt.Println(err)
-	}
+	return c.conn.WriteMessage(websocket.PingMessage, []byte{})
 }
 
 func (c *Client) dispatchMsg(msg []byte) {
