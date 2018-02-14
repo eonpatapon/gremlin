@@ -243,7 +243,7 @@ func (c *Client) IsConnected() bool {
 // Send sends a request to the gremlin server and wait for results
 func (c *Client) Send(r *Request) (data []byte, err error) {
 	if !c.IsConnected() {
-		err = errors.New("Not connected")
+		err = ErrConnectionClosed
 		return
 	}
 	ch := make(chan clientResponse)
