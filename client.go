@@ -209,7 +209,6 @@ func (c *Client) ConnectAsync() {
 	go func() {
 		for c.running.Load() == true {
 			err := c.connect()
-			c.connectedEvent = make(chan bool, 1)
 			c.disconnectedHandler(err)
 			time.Sleep(1 * time.Second)
 		}
