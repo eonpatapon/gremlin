@@ -51,7 +51,6 @@ type Client struct {
 	quit                chan error
 	connected           atomic.Value
 	running             atomic.Value
-	connectedEvent      chan bool
 	disconnectedEvent   chan bool
 	pingTicker          *time.Ticker
 	connectedHandler    func()
@@ -73,7 +72,6 @@ func NewClient(serverURL string) *Client {
 		send:                make(chan clientRequest, maxMessages),
 		read:                make(chan []byte, maxMessages),
 		quit:                make(chan error, 2),
-		connectedEvent:      make(chan bool, 1),
 		disconnectedEvent:   make(chan bool, 1),
 		connectedHandler:    func() { return },
 		disconnectedHandler: func(err error) { return },
@@ -107,7 +105,6 @@ func (c *Client) connect() (err error) {
 	})
 
 	c.connected.Store(true)
-	c.connectedEvent <- true
 	c.pingTicker = time.NewTicker(pingDelay)
 
 	defer c.connected.Store(false)
@@ -219,7 +216,9 @@ func (c *Client) ConnectAsync() {
 // Connect connects to the server and block until connection is successful
 func (c *Client) Connect() {
 	c.ConnectAsync()
-	<-c.connectedEvent
+	for !c.IsConnected() {
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 // Disconnect the client without waiting for termination
