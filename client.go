@@ -280,7 +280,11 @@ func (c *Client) Send(r *Request) (data []byte, err error) {
 
 		default:
 			if gremlinErr, exists := ErrorMsg[res.Status.Code]; exists {
-				err = gremlinErr
+				if gremlinErr == ErrStatusScriptEvaluationError {
+					err = fmt.Errorf("%s", clientRes.response.Status.Message)
+				} else {
+					err = gremlinErr
+				}
 			} else {
 				err = ErrUnknownError
 			}
